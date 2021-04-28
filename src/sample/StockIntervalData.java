@@ -15,13 +15,15 @@ public class StockIntervalData {
     private ArrayList<Double> data;
     private XYChart.Series series;
     private int seriesDataCount;
+    private double numOfShares;
 
     // class constructor
-    public StockIntervalData(String stockName, String stockSymbol) {
+    public StockIntervalData(String stockName, String stockSymbol, double numOfShares) {
         this.stockName = stockName;
         this.stockSymbol = stockSymbol;
         data = new ArrayList<>();
         series = new XYChart.Series();
+        this.numOfShares = numOfShares;
     }
 
     // all getter methods located here
@@ -30,6 +32,10 @@ public class StockIntervalData {
     public ArrayList<Double> getData() { return data; }
     public XYChart.Series getSeries() { return series; }
     public int getSeriesDataCount() { return seriesDataCount; }
+    public double getNumOfShares() { return numOfShares; }
+
+    // all setter methods located here
+    public void setNumOfShares(double numOfShares) { this.numOfShares = numOfShares; }
 
     // method to add data to both our arrayList as well as our series
     public void addData(double datum) {
@@ -45,11 +51,12 @@ public class StockIntervalData {
 
     // method to graph the interval data
     public void graphData(LineChart lineChart, NumberAxis xaxisStock, NumberAxis yaxisStock, Label lblStockName,
-                          Label lblCurrentSharePrice, Label lblCurrentSharePriceNumber) {
+                          Label lblCurrentSharePrice, Label lblCurrentSharePriceNumber, Label lblShareNumber) {
         System.out.println("CURRENTLY GRAPHING        " + stockName);
         lblStockName.setText(stockName + " (" + stockSymbol + ")");
         lblCurrentSharePrice.setText("The Current Share Price for " + stockSymbol + ":");
         lblCurrentSharePriceNumber.setText(data.get(data.size() - 1) + " USD");
+        lblShareNumber.setText("You currently own " + numOfShares + " shares in " + stockSymbol + ".");
 
         xaxisStock.setLabel("Daily Time Series");
         yaxisStock.setLabel("Open Price Per Day");

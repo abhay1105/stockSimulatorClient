@@ -34,7 +34,7 @@ public class AccountPageController {
     @FXML
     ListView lstStockSelect;
     @FXML
-    Label lblAccountName, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber;
+    Label lblAccountName, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber, lblAccountBalance, lblShareNumber;
     @FXML
     NumberAxis xaxisStock, yaxisStock;
     @FXML
@@ -186,7 +186,7 @@ public class AccountPageController {
         if (firstTimeRun) {
             for (int i = 0;i < json.getJsonArray("complete_interval_data").size();i++) {
                 JsonObject jsonObject = json.getJsonArray("complete_interval_data").getJsonObject(i);
-                stockIntervalDataList.add(new StockIntervalData(jsonObject.getString("stock_name"), jsonObject.getString("stock_symbol")));
+                stockIntervalDataList.add(new StockIntervalData(jsonObject.getString("stock_name"), jsonObject.getString("stock_symbol"), jsonObject.getDouble("number_of_shares")));
             }
             firstTimeRun = false;
         }
@@ -207,22 +207,35 @@ public class AccountPageController {
             }
 
             // actually retrieving the data from the JsonObjects
+            StockIntervalData selectedStockIntervalData = null;
             for (int i = 0;i < json.getJsonArray("complete_interval_data").size();i++) {
                 JsonObject jsonObject = json.getJsonArray("complete_interval_data").getJsonObject(i);
                 for (StockIntervalData stockIntervalData: stockIntervalDataList) {
                     if (stockIntervalData.getStockSymbol().equals(jsonObject.getString("stock_symbol"))) {
+                        selectedStockIntervalData = stockIntervalData;
                         for (int j = 0;j < jsonObject.getJsonArray("open_prices").size();j++) {
                             stockIntervalData.addData(jsonObject.getJsonArray("open_prices").getDouble(j));
                         }
+                        stockIntervalData.setNumOfShares(jsonObject.getDouble("number_of_shares"));
                     }
                 }
             }
 
             // method call will change all the labels associated with the graph, as well as any axis changes that might be required
-            currentStock.graphData(chrtStock, xaxisStock, yaxisStock, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber);
+            currentStock.graphData(chrtStock, xaxisStock, yaxisStock, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber, lblShareNumber);
+
+            // method call will update all of the account statistics that come from the server
+            if (selectedStockIntervalData != null) {
+                updateAccountStatistics(json.getDouble("account_balance"));
+            }
 
         }
 
+    }
+
+    // method will be used in order to update all of our account statistics
+    public void updateAccountStatistics(double accountBalance) {
+        lblAccountBalance.setText("$" + accountBalance);
     }
 
     // method will be used for abstraction purposes in both the buy and sell request functions below
@@ -234,7 +247,9 @@ public class AccountPageController {
         jsonObject.put("share_price", latestSharePrice);
         jsonObject.put("number_of_shares", numOfSharesRequested);
         jsonObject.put("type", type);
+        System.out.println(jsonObject.encode());
         busProducer.write(jsonObject.encode());
+        System.out.println(type + "       " + numOfSharesRequested + "      " + selectedStockSymbol + "     " + latestSharePrice);
     }
 
     // method will send a request to the server so that the player can buy shares in a stock
