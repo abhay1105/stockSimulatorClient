@@ -13,8 +13,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 
@@ -22,14 +22,27 @@ import javafx.event.ActionEvent;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.util.ArrayList;
 
 public class StartingPageController {
 
     // all fx elements located here
     @FXML
-    TextField txtfiEnterNickname, txtfiGameMode;
+    TextField txtfiEnterNickname, txtfiGameMode, txtfiStartingBalance;
     @FXML
-    Button btnConnect;
+    Button btnConnect, btnSetStartBalance, btnAddSearchedStock, btnRemoveSelectedStock;
+    @FXML
+    AnchorPane anchOptionsScreen;
+    @FXML
+    TextArea txtarStockSearch;
+    @FXML
+    ListView lstSearchResults, lstSelectedStocks;
+    @FXML
+    Label lblSearch;
 
     private final ClientHandler clientHandler;
     private final Logger logger;
@@ -44,6 +57,14 @@ public class StartingPageController {
     private AccountPageController accountPageController;
     private ActionEvent actionEvent;
     private Parent root;
+
+    // global variables to help keep track of desired game settings
+    private String mode;
+    private double startingBalance;
+    private double timeInMin;
+    private int maxNumStocks;
+    private ArrayList<String> stockSymbols = new ArrayList<>();
+    private ArrayList<String> stockNames = new ArrayList<>();
 
     // controller constructor
     public StartingPageController() throws IOException {
@@ -147,5 +168,64 @@ public class StartingPageController {
         });
 
     }
+
+    // method will switch between the options screen for creating a new game and the main screen for entering a name
+    // and either joining or actually creating a game
+    boolean visibility = false;
+    public void switchOptionsScreen() {
+        visibility = !visibility;
+        anchOptionsScreen.setVisible(visibility);
+    }
+
+    // all settings related methods will be found below
+    public void singleChoiceMode() { mode = "single-stock"; maxNumStocks = 1; lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + ".):"); }
+    public void multiChoiceMode() { mode = "multiple-stocks"; maxNumStocks = 10; lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + ".):"); }
+    public void freestyleChoiceMode() { mode = "freestyle"; maxNumStocks = 50; lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + ".):"); }
+    public void setStartingBalance() { startingBalance = Double.parseDouble(txtfiStartingBalance.getText()); }
+    public void twoMinChoiceTime() { timeInMin = 2; }
+    public void fiveMinChoiceTime() { timeInMin = 5; }
+    public void tenMinChoiceTime() { timeInMin = 10; }
+    public void updateStockSearchResults() throws IOException, InterruptedException {
+        String searchEntry = txtarStockSearch.getText();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=" + searchEntry + "&apikey=9MFKMGNE0JRT1HWU"))
+                .header("x-rapidapi-key", "SIGN-UP-FOR-KEY")
+                .header("x-rapidapi-host", "alpha-vantage.p.rapidapi.com")
+                .method("GET", HttpRequest.BodyPublishers.noBody())
+                .build();
+        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+        JsonObject json = new JsonObject(response.body());
+        JsonArray jsonArray = json.getJsonArray("bestMatches");
+        lstSearchResults.getItems().clear();
+        for (Object object: jsonArray) {
+            JsonObject jsonObject = (JsonObject) object;
+            String name = jsonObject.getString("2. name");
+            String symbol = jsonObject.getString("1. symbol");
+            lstSearchResults.getItems().add(name + " (" + symbol + ")");
+        }
+    }
+    public void addSearchedStock() {
+        if (stockSymbols.size() < maxNumStocks) {
+            String selectedString = lstSearchResults.getSelectionModel().getSelectedItem().toString();
+            stockNames.add(selectedString.substring(0, selectedString.indexOf("(") - 1));
+            stockSymbols.add(selectedString.substring(selectedString.indexOf("(") + 1, selectedString.indexOf(")")));
+            lstSelectedStocks.getItems().add(selectedString);
+        }
+    }
+    public void removeSelectedStock() {
+        String selectedString = lstSelectedStocks.getSelectionModel().getSelectedItem().toString();
+        for (int i = 0;i < stockSymbols.size();i++) {
+            if (selectedString.substring(0, selectedString.indexOf("(") - 1).equals(stockNames.get(i))) {
+                stockNames.remove(i);
+            }
+            if (selectedString.substring(selectedString.indexOf("(") + 1, selectedString.indexOf(")")).equals(stockSymbols.get(i))) {
+                stockSymbols.remove(i);
+                break;
+            }
+        }
+        lstSelectedStocks.getItems().remove(selectedString);
+    }
+
 
 }

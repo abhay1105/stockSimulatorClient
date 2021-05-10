@@ -32,9 +32,10 @@ public class AccountPageController {
     @FXML
     AnchorPane anchAccountPage;
     @FXML
-    ListView lstStockSelect;
+    ListView lstStockSelect, lstGamePlayers;
     @FXML
-    Label lblAccountName, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber, lblAccountBalance, lblShareNumber;
+    Label lblAccountName, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber, lblAccountBalance,
+            lblShareNumber, lblAmountInvested, lblProfitOrLoss, lblCurrentValue, lblAmountInvestedStock, lblCurrentValueStock;
     @FXML
     NumberAxis xaxisStock, yaxisStock;
     @FXML
