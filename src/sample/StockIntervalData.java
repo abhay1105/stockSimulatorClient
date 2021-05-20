@@ -16,6 +16,8 @@ public class StockIntervalData {
     private XYChart.Series series;
     private int seriesDataCount;
     private double numOfShares;
+    private double currentValueStock;
+    private double amountInvestedStock;
 
     // class constructor
     public StockIntervalData(String stockName, String stockSymbol, double numOfShares) {
@@ -33,9 +35,13 @@ public class StockIntervalData {
     public XYChart.Series getSeries() { return series; }
     public int getSeriesDataCount() { return seriesDataCount; }
     public double getNumOfShares() { return numOfShares; }
+    public double getCurrentValueStock() { return currentValueStock; }
+    public double getAmountInvestedStock() { return amountInvestedStock; }
 
     // all setter methods located here
     public void setNumOfShares(double numOfShares) { this.numOfShares = numOfShares; }
+    public void setCurrentValueStock(double value) { currentValueStock = value; }
+    public void setAmountInvestedStock(double amount) { amountInvestedStock = amount; }
 
     // method to add data to both our arrayList as well as our series
     public void addData(double datum) {
@@ -51,12 +57,14 @@ public class StockIntervalData {
 
     // method to graph the interval data
     public void graphData(LineChart lineChart, NumberAxis xaxisStock, NumberAxis yaxisStock, Label lblStockName,
-                          Label lblCurrentSharePrice, Label lblCurrentSharePriceNumber, Label lblShareNumber) {
+                          Label lblCurrentSharePrice, Label lblCurrentSharePriceNumber, Label lblShareNumber, Label lblCurrentValueStock, Label lblAmountInvestedStock) {
         System.out.println("CURRENTLY GRAPHING        " + stockName);
         lblStockName.setText(stockName + " (" + stockSymbol + ")");
         lblCurrentSharePrice.setText("The Current Share Price for " + stockSymbol + ":");
         lblCurrentSharePriceNumber.setText(data.get(data.size() - 1) + " USD");
         lblShareNumber.setText("You currently own " + numOfShares + " shares in " + stockSymbol + ".");
+        lblCurrentValueStock.setText("$" + currentValueStock);
+        lblAmountInvestedStock.setText("$" + amountInvestedStock);
 
         xaxisStock.setLabel("Daily Time Series");
         yaxisStock.setLabel("Open Price Per Day");

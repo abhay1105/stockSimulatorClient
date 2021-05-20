@@ -32,9 +32,9 @@ public class StartingPageController {
 
     // all fx elements located here
     @FXML
-    TextField txtfiEnterNickname, txtfiGameMode, txtfiStartingBalance;
+    TextField txtfiEnterNickname, txtfiGameCode, txtfiStartingBalance;
     @FXML
-    Button btnConnect, btnSetStartBalance, btnAddSearchedStock, btnRemoveSelectedStock;
+    Button btnCreateNewGame, btnJoinCurrentGame, btnSetStartBalance, btnAddSearchedStock, btnRemoveSelectedStock;
     @FXML
     AnchorPane anchOptionsScreen;
     @FXML
@@ -43,6 +43,8 @@ public class StartingPageController {
     ListView lstSearchResults, lstSelectedStocks;
     @FXML
     Label lblSearch;
+    @FXML
+    CheckBox chSingle, chMulti, chFree, chTwo, chFive, chTen;
 
     private final ClientHandler clientHandler;
     private final Logger logger;
@@ -65,6 +67,9 @@ public class StartingPageController {
     private int maxNumStocks;
     private ArrayList<String> stockSymbols = new ArrayList<>();
     private ArrayList<String> stockNames = new ArrayList<>();
+
+    // to keep track of whether or not a player will request for a new game or join a current game
+    private String newOrCurrentGame;
 
     // controller constructor
     public StartingPageController() throws IOException {
@@ -104,12 +109,22 @@ public class StartingPageController {
 
     // method to connect the client to the server
     public void connectToServer(ActionEvent event) {
-
         // connecting the javafx client to our http server
         clientHandler.startClient("127.0.0.1", 8080, "nickname");
         // used to load next scene
         actionEvent = event;
+    }
 
+    // method to create a new game
+    public void createNewGame(ActionEvent event) {
+        newOrCurrentGame = "newGame";
+        connectToServer(event);
+    }
+
+    // method to join a current game
+    public void joinCurrentGame(ActionEvent event) {
+        newOrCurrentGame = "currentGame";
+        connectToServer(event);
     }
 
     // method takes in every message that is incoming from the busProducer in the GameClientVerticle and processes it
@@ -136,13 +151,32 @@ public class StartingPageController {
     // method to send a message to the server letting them know whether a current game is being joined
     // or a new game has to be created
     public void sendCurrentOrNewGame() {
-        // hardcoded to yes, we want a new game. we can change the input later depending on how we want to ask the
-        // user this in our UI
-        String choice = "yes";
+        String choice;
         JsonObject json = new JsonObject();
-        json.put("player_choice", choice);
+        if (newOrCurrentGame.equals("newGame")) {
+            // for creating new games
+            choice = "yes";
+            json.put("player_choice", choice);
+            JsonArray stockNamesArray = new JsonArray();
+            JsonArray stockSymbolsArray = new JsonArray();
+            for (int i = 0;i < stockNames.size();i++) {
+                stockNamesArray.add(stockNames.get(i));
+                stockSymbolsArray.add(stockSymbols.get(i));
+            }
+            json.put("stock_names", stockNamesArray);
+            json.put("stock_symbols", stockSymbolsArray);
+            json.put("mode", mode);
+            json.put("starting_balance", startingBalance);
+            json.put("game_time", timeInMin);
+        } else {
+            // for joining current games
+            choice = "no";
+            json.put("player_choice", choice);
+            json.put("game_code", txtfiGameCode.getText());
+        }
         json.put("type", "new_or_current_game");
         busProducer.write(json.encode());
+        System.out.println("send current or new message works");
     }
 
     // method to load in the account page of the particular player
@@ -157,13 +191,15 @@ public class StartingPageController {
             // actually updating our accountPage with the new player information
             accountPageController.lblAccountName.setText(json.getString("player_name") + "'s Account");
             accountPageController.lstStockSelect.getItems().clear();
+            accountPageController.lblGameCode.setText("Game Code: " + json.getString("game_code"));
+            accountPageController.lstGamePlayers.getItems().clear();
+            accountPageController.lblAccountBalance.setText("$" + json.getDouble("first_player_score"));
+            accountPageController.lstGamePlayers.getItems().add(json.getString("player_name") + "               $" + json.getDouble("first_player_score"));
             JsonArray jsonArray = json.getJsonArray("stocks");
             for (int index = 0; index < jsonArray.size(); ++index) {
                 accountPageController.lstStockSelect.getItems().add(jsonArray.getString(index));
             }
             stage.show();
-
-            System.out.println("everything updated very nicely ###################");
 
         });
 
@@ -178,13 +214,29 @@ public class StartingPageController {
     }
 
     // all settings related methods will be found below
-    public void singleChoiceMode() { mode = "single-stock"; maxNumStocks = 1; lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + ".):"); }
-    public void multiChoiceMode() { mode = "multiple-stocks"; maxNumStocks = 10; lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + ".):"); }
-    public void freestyleChoiceMode() { mode = "freestyle"; maxNumStocks = 50; lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + ".):"); }
+    public void singleChoiceMode() {
+        mode = "single-stock"; maxNumStocks = 1;
+        lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + "):");
+        chMulti.setSelected(false);
+        chFree.setSelected(false);
+    }
+    public void multiChoiceMode() {
+        mode = "multiple-stocks"; maxNumStocks = 10;
+        lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + "):");
+        chSingle.setSelected(false);
+        chFree.setSelected(false);
+    }
+    public void freestyleChoiceMode() {
+        mode = "freestyle";
+        maxNumStocks = 50;
+        lblSearch.setText("Select Stocks for Play (Max " + maxNumStocks + "):");
+        chSingle.setSelected(false);
+        chMulti.setSelected(false);
+    }
     public void setStartingBalance() { startingBalance = Double.parseDouble(txtfiStartingBalance.getText()); }
-    public void twoMinChoiceTime() { timeInMin = 2; }
-    public void fiveMinChoiceTime() { timeInMin = 5; }
-    public void tenMinChoiceTime() { timeInMin = 10; }
+    public void twoMinChoiceTime() { timeInMin = 2; chFive.setSelected(false); chTen.setSelected(false); }
+    public void fiveMinChoiceTime() { timeInMin = 5; chTwo.setSelected(false); chTen.setSelected(false); }
+    public void tenMinChoiceTime() { timeInMin = 10; chTwo.setSelected(false); chFive.setSelected(false); }
     public void updateStockSearchResults() throws IOException, InterruptedException {
         String searchEntry = txtarStockSearch.getText();
         HttpRequest request = HttpRequest.newBuilder()

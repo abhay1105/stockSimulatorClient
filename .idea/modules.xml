@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/TemplateProject.iml" filepath="$PROJECT_DIR$/TemplateProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/stockSimGameUI.iml" filepath="$PROJECT_DIR$/stockSimGameUI.iml" />
     </modules>
   </component>
 </project>

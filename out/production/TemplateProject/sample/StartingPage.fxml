@@ -13,18 +13,23 @@
 <AnchorPane prefHeight="750.0" prefWidth="1500.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.StartingPageController">
    <children>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="LIGHTGRAY" height="750.0" stroke="BLACK" strokeType="INSIDE" width="1500.0" />
+      <Button fx:id="btnJoinCurrentGame" layoutX="531.0" layoutY="496.0" mnemonicParsing="false" onAction="#joinCurrentGame" prefHeight="94.0" prefWidth="438.0" text="JOIN GAME">
+         <font>
+            <Font size="24.0" />
+         </font>
+      </Button>
       <TextField fx:id="txtfiEnterNickname" layoutX="520.0" layoutY="323.0" prefHeight="46.0" prefWidth="459.0" promptText="nickname" />
-      <Button fx:id="btnConnect" layoutX="530.0" layoutY="389.0" mnemonicParsing="false" onAction="#connectToServer" prefHeight="94.0" prefWidth="438.0" text="JOIN GAME">
+      <Button fx:id="btnCreateNewGame" layoutX="530.0" layoutY="389.0" mnemonicParsing="false" onAction="#createNewGame" prefHeight="94.0" prefWidth="438.0" text="CREATE NEW GAME">
          <font>
             <Font size="24.0" />
          </font></Button>
-      <TextField fx:id="txtfiGameMode" layoutX="520.0" layoutY="266.0" prefHeight="46.0" prefWidth="459.0" promptText="mode" />
+      <TextField fx:id="txtfiGameCode" layoutX="520.0" layoutY="266.0" prefHeight="46.0" prefWidth="459.0" promptText="game code" />
       <Label layoutX="1323.0" layoutY="685.0" onMouseClicked="#switchOptionsScreen" text="Game Options" textAlignment="CENTER" textFill="#3873ff">
          <font>
             <Font name="System Bold" size="18.0" />
          </font>
       </Label>
-      <AnchorPane fx:id="anchOptionsScreen" visible="false" layoutX="282.0" layoutY="103.0" prefHeight="544.0" prefWidth="934.0">
+      <AnchorPane fx:id="anchOptionsScreen" layoutX="282.0" layoutY="103.0" prefHeight="544.0" prefWidth="934.0" visible="false">
          <children>
             <Rectangle arcHeight="5.0" arcWidth="5.0" fill="DODGERBLUE" height="544.0" stroke="BLACK" strokeType="INSIDE" width="934.0" />
             <Label layoutX="24.0" layoutY="24.0" onMouseClicked="#switchOptionsScreen" text="Mode:" textAlignment="CENTER" textFill="WHITE">
@@ -32,49 +37,49 @@
                   <Font name="System Bold" size="24.0" />
                </font>
             </Label>
-            <CheckBox layoutX="45.0" layoutY="65.0" mnemonicParsing="false" onAction="#singleChoiceMode" text="Single Stock Play" textFill="WHITE">
+            <CheckBox fx:id="chSingle" layoutX="45.0" layoutY="65.0" mnemonicParsing="false" onAction="#singleChoiceMode" text="Single Stock Play" textFill="WHITE">
                <font>
-                  <Font name="System Bold Italic" size="12.0" />
+                  <Font name="System Bold Italic" size="15.0" />
                </font>
             </CheckBox>
-            <CheckBox layoutX="45.0" layoutY="94.0" mnemonicParsing="false" onAction="#multiChoiceMode" text="Multi-Stock Play" textFill="WHITE">
+            <CheckBox fx:id="chMulti" layoutX="45.0" layoutY="94.0" mnemonicParsing="false" onAction="#multiChoiceMode" text="Multi-Stock Play" textFill="WHITE">
                <font>
-                  <Font name="System Bold Italic" size="12.0" />
+                  <Font name="System Bold Italic" size="15.0" />
                </font>
             </CheckBox>
-            <CheckBox layoutX="45.0" layoutY="122.0" mnemonicParsing="false" onAction="#freestyleChoiceMode" text="Freestyle Mode" textFill="WHITE">
+            <CheckBox fx:id="chFree" layoutX="45.0" layoutY="122.0" mnemonicParsing="false" onAction="#freestyleChoiceMode" text="Freestyle Mode" textFill="WHITE">
                <font>
-                  <Font name="System Bold Italic" size="12.0" />
+                  <Font name="System Bold Italic" size="15.0" />
                </font>
             </CheckBox>
-            <Label layoutX="24.0" layoutY="152.0" onMouseClicked="#switchOptionsScreen" text="Starting Balance:" textAlignment="CENTER" textFill="WHITE">
+            <Label layoutX="24.0" layoutY="158.0" onMouseClicked="#switchOptionsScreen" text="Starting Balance:" textAlignment="CENTER" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="24.0" />
                </font>
             </Label>
-            <TextField fx:id="txtfiStartingBalance" layoutX="44.0" layoutY="198.0" promptText="enter amount in dollars">
+            <TextField fx:id="txtfiStartingBalance" layoutX="44.0" layoutY="204.0" promptText="enter amount in dollars">
                <font>
                   <Font name="System Italic" size="12.0" />
                </font>
             </TextField>
-            <Label layoutX="24.0" layoutY="239.0" onMouseClicked="#switchOptionsScreen" text="Time:" textAlignment="CENTER" textFill="WHITE">
+            <Label layoutX="24.0" layoutY="245.0" onMouseClicked="#switchOptionsScreen" text="Time:" textAlignment="CENTER" textFill="WHITE">
                <font>
                   <Font name="System Bold" size="24.0" />
                </font>
             </Label>
-            <CheckBox layoutX="42.0" layoutY="279.0" mnemonicParsing="false" onAction="#twoMinChoiceTime" text="2 MINUTES" textFill="WHITE">
+            <CheckBox fx:id="chTwo" layoutX="42.0" layoutY="285.0" mnemonicParsing="false" onAction="#twoMinChoiceTime" prefHeight="22.0" prefWidth="160.0" text="2 MINUTES" textFill="WHITE">
                <font>
-                  <Font name="System Bold Italic" size="12.0" />
+                  <Font name="System Bold Italic" size="15.0" />
                </font>
             </CheckBox>
-            <CheckBox layoutX="42.0" layoutY="308.0" mnemonicParsing="false" onAction="#fiveMinChoiceTime" text="5 MINUTES" textFill="WHITE">
+            <CheckBox fx:id="chFive" layoutX="42.0" layoutY="314.0" mnemonicParsing="false" onAction="#fiveMinChoiceTime" prefHeight="22.0" prefWidth="160.0" text="5 MINUTES" textFill="WHITE">
                <font>
-                  <Font name="System Bold Italic" size="12.0" />
+                  <Font name="System Bold Italic" size="15.0" />
                </font>
             </CheckBox>
-            <CheckBox layoutX="42.0" layoutY="337.0" mnemonicParsing="false" onAction="#tenMinChoiceTime" text="10 MINUTES" textFill="WHITE">
+            <CheckBox fx:id="chTen" layoutX="42.0" layoutY="343.0" mnemonicParsing="false" onAction="#tenMinChoiceTime" prefHeight="22.0" prefWidth="166.0" text="10 MINUTES" textFill="WHITE">
                <font>
-                  <Font name="System Bold Italic" size="12.0" />
+                  <Font name="System Bold Italic" size="15.0" />
                </font>
             </CheckBox>
             <Label fx:id="lblSearch" layoutX="310.0" layoutY="29.0" onMouseClicked="#switchOptionsScreen" text="Select Stocks for Play (Max):" textAlignment="CENTER" textFill="WHITE">
@@ -87,7 +92,7 @@
                   <Font name="System Italic" size="12.0" />
                </font>
             </TextArea>
-            <Button fx:id="btnSetStartBalance" layoutX="198.0" layoutY="198.0" mnemonicParsing="false" onAction="#setStartingBalance" text="SET" />
+            <Button fx:id="btnSetStartBalance" layoutX="198.0" layoutY="204.0" mnemonicParsing="false" onAction="#setStartingBalance" text="SET" />
             <ListView fx:id="lstSearchResults" layoutX="310.0" layoutY="108.0" prefHeight="142.0" prefWidth="572.0" />
             <Button fx:id="btnAddSearchedStock" layoutX="820.0" layoutY="68.0" mnemonicParsing="false" onAction="#addSearchedStock" prefHeight="38.0" prefWidth="62.0" text="ADD" />
             <Label layoutX="310.0" layoutY="279.0" onMouseClicked="#switchOptionsScreen" text="Currently Selected Stocks:" textAlignment="CENTER" textFill="WHITE">

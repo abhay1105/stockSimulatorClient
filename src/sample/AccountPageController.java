@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class AccountPageController {
 
@@ -35,7 +38,8 @@ public class AccountPageController {
     ListView lstStockSelect, lstGamePlayers;
     @FXML
     Label lblAccountName, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber, lblAccountBalance,
-            lblShareNumber, lblAmountInvested, lblProfitOrLoss, lblCurrentValue, lblAmountInvestedStock, lblCurrentValueStock;
+            lblShareNumber, lblAmountInvested, lblProfitOrLoss, lblCurrentValue, lblAmountInvestedStock,
+            lblCurrentValueStock, lblGameCode, lblTimeRemaining;
     @FXML
     NumberAxis xaxisStock, yaxisStock;
     @FXML
@@ -97,6 +101,17 @@ public class AccountPageController {
             Platform.runLater(() -> {
                 updateChartInterval(json);
             });
+        } else if (messageType.equals("empty_timer_run")) {
+            Platform.runLater(() -> {
+                double totalNumOfMillisecondsLeft = json.getDouble("total_num_of_milliseconds_left");
+                int minutesRemaining = (int) totalNumOfMillisecondsLeft / 60000;
+                int secondsRemaining = ((int) totalNumOfMillisecondsLeft % 60000) / 1000;
+                lblTimeRemaining.setText(minutesRemaining + ":" + secondsRemaining);
+            });
+        } else if (messageType.equals("updated_leaderboard")) {
+            Platform.runLater(() -> {
+                updateLeaderboard(json);
+            });
         }
     }
 
@@ -130,6 +145,21 @@ public class AccountPageController {
         json.put("amount_per_interval", amountOfDataPerInterval);
         json.put("type", "stock_data_request_interval");
         busProducer.write(json.encode());
+    }
+
+    // method will update the leaderboard accordingly
+    public void updateLeaderboard(JsonObject jsonObject) {
+        JsonArray names = jsonObject.getJsonArray("players");
+        JsonArray scores = jsonObject.getJsonArray("scores");
+        lstGamePlayers.getItems().clear();
+        Map<Double,String> unorderedMap = new HashMap<>();
+        for (int i = 0;i < names.size();i++) {
+            unorderedMap.put(scores.getDouble(i), names.getString(i));
+        }
+        Map<Double,String> orderedMap = new TreeMap<>(unorderedMap);
+        for (Double num: orderedMap.keySet()) {
+            lstGamePlayers.getItems().add(orderedMap.get(num) + "               $" + num);
+        }
     }
 
     // method will actually receive the full amount of data and update the graph accordingly
@@ -218,12 +248,24 @@ public class AccountPageController {
                             stockIntervalData.addData(jsonObject.getJsonArray("open_prices").getDouble(j));
                         }
                         stockIntervalData.setNumOfShares(jsonObject.getDouble("number_of_shares"));
+                        stockIntervalData.setCurrentValueStock(jsonObject.getDouble("current_value_stock"));
+                        stockIntervalData.setAmountInvestedStock(jsonObject.getDouble("amount_invested_stock"));
                     }
                 }
             }
 
+            // will update the time remaining in terms of minutes and seconds
+            double totalNumOfMillisecondsLeft = json.getDouble("total_num_of_milliseconds_left");
+            int minutesRemaining = (int) totalNumOfMillisecondsLeft / 60000;
+            int secondsRemaining = ((int) totalNumOfMillisecondsLeft % 60000) / 1000;
+            lblTimeRemaining.setText(minutesRemaining + ":" + secondsRemaining);
+
+            lblCurrentValue.setText("$" + json.getDouble("current_value_account"));
+            lblAmountInvested.setText("$" + json.getDouble("money_invested_account"));
+            lblProfitOrLoss.setText("$" + json.getDouble("profit_or_loss_account"));
+
             // method call will change all the labels associated with the graph, as well as any axis changes that might be required
-            currentStock.graphData(chrtStock, xaxisStock, yaxisStock, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber, lblShareNumber);
+            currentStock.graphData(chrtStock, xaxisStock, yaxisStock, lblStockName, lblCurrentSharePrice, lblCurrentSharePriceNumber, lblShareNumber, lblCurrentValueStock, lblAmountInvestedStock);
 
             // method call will update all of the account statistics that come from the server
             if (selectedStockIntervalData != null) {
