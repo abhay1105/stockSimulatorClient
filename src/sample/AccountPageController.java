@@ -24,10 +24,8 @@ import javafx.event.ActionEvent;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class AccountPageController {
 
@@ -106,11 +104,11 @@ public class AccountPageController {
                 double totalNumOfMillisecondsLeft = json.getDouble("total_num_of_milliseconds_left");
                 int minutesRemaining = (int) totalNumOfMillisecondsLeft / 60000;
                 int secondsRemaining = ((int) totalNumOfMillisecondsLeft % 60000) / 1000;
-                lblTimeRemaining.setText(minutesRemaining + ":" + secondsRemaining);
-            });
-        } else if (messageType.equals("updated_leaderboard")) {
-            Platform.runLater(() -> {
-                updateLeaderboard(json);
+                if (secondsRemaining < 10) {
+                    lblTimeRemaining.setText(minutesRemaining + ":0" + secondsRemaining);
+                } else {
+                    lblTimeRemaining.setText(minutesRemaining + ":" + secondsRemaining);
+                }
             });
         }
     }
@@ -149,16 +147,31 @@ public class AccountPageController {
 
     // method will update the leaderboard accordingly
     public void updateLeaderboard(JsonObject jsonObject) {
+        System.out.println("leaderboard update function");
         JsonArray names = jsonObject.getJsonArray("players");
         JsonArray scores = jsonObject.getJsonArray("scores");
         lstGamePlayers.getItems().clear();
-        Map<Double,String> unorderedMap = new HashMap<>();
+        ArrayList<String> namesList = new ArrayList<>();
+        ArrayList<Double> scoresList = new ArrayList<>();
         for (int i = 0;i < names.size();i++) {
-            unorderedMap.put(scores.getDouble(i), names.getString(i));
+            namesList.add(names.getString(i));
+            scoresList.add(scores.getDouble(i));
         }
-        Map<Double,String> orderedMap = new TreeMap<>(unorderedMap);
-        for (Double num: orderedMap.keySet()) {
-            lstGamePlayers.getItems().add(orderedMap.get(num) + "               $" + num);
+        // Insertion Sort to set scores and names in ascending order
+        for (int j = 1;j < scoresList.size() - 1;j++) {
+            double tempNum = scoresList.get(j);
+            String tempName = namesList.get(j);
+            int k = j - 1;
+            while (k >= 0 && tempNum <= scoresList.get(k)) {
+                scoresList.set(k + 1, scoresList.get(k));
+                namesList.set(k + 1, namesList.get(k));
+                k = k - 1;
+            }
+            scoresList.set(k + 1, tempNum);
+            namesList.set(k + 1, tempName);
+        }
+        for (int h = 0;h < namesList.size();h++) {
+            lstGamePlayers.getItems().add(namesList.get(h) + "                    $" + scoresList.get(h));
         }
     }
 
@@ -222,6 +235,9 @@ public class AccountPageController {
             firstTimeRun = false;
         }
 
+        // code to update the leaderboard located here
+        updateLeaderboard(json);
+
         // clearing graph and adding a different series to graph if user clicks on a different stock
         selectedStockSymbol = (String) lstStockSelect.getSelectionModel().getSelectedItem();
         if (selectedStockSymbol != null) {
@@ -258,7 +274,11 @@ public class AccountPageController {
             double totalNumOfMillisecondsLeft = json.getDouble("total_num_of_milliseconds_left");
             int minutesRemaining = (int) totalNumOfMillisecondsLeft / 60000;
             int secondsRemaining = ((int) totalNumOfMillisecondsLeft % 60000) / 1000;
-            lblTimeRemaining.setText(minutesRemaining + ":" + secondsRemaining);
+            if (secondsRemaining < 10) {
+                lblTimeRemaining.setText(minutesRemaining + ":0" + secondsRemaining);
+            } else {
+                lblTimeRemaining.setText(minutesRemaining + ":" + secondsRemaining);
+            }
 
             lblCurrentValue.setText("$" + json.getDouble("current_value_account"));
             lblAmountInvested.setText("$" + json.getDouble("money_invested_account"));

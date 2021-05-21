@@ -194,7 +194,7 @@ public class StartingPageController {
             accountPageController.lblGameCode.setText("Game Code: " + json.getString("game_code"));
             accountPageController.lstGamePlayers.getItems().clear();
             accountPageController.lblAccountBalance.setText("$" + json.getDouble("first_player_score"));
-            accountPageController.lstGamePlayers.getItems().add(json.getString("player_name") + "               $" + json.getDouble("first_player_score"));
+            accountPageController.lstGamePlayers.getItems().add(json.getString("player_name") + "                    $" + json.getDouble("first_player_score"));
             JsonArray jsonArray = json.getJsonArray("stocks");
             for (int index = 0; index < jsonArray.size(); ++index) {
                 accountPageController.lstStockSelect.getItems().add(jsonArray.getString(index));
