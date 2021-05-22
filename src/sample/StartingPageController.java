@@ -14,6 +14,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -21,6 +23,8 @@ import org.slf4j.Logger;
 import javafx.event.ActionEvent;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -34,7 +38,7 @@ public class StartingPageController {
     @FXML
     TextField txtfiEnterNickname, txtfiGameCode, txtfiStartingBalance;
     @FXML
-    Button btnCreateNewGame, btnJoinCurrentGame, btnSetStartBalance, btnAddSearchedStock, btnRemoveSelectedStock;
+    Button btnCreateNewGame, btnJoinCurrentGame, btnAddSearchedStock, btnRemoveSelectedStock;
     @FXML
     AnchorPane anchOptionsScreen;
     @FXML
@@ -45,6 +49,8 @@ public class StartingPageController {
     Label lblSearch;
     @FXML
     CheckBox chSingle, chMulti, chFree, chTwo, chFive, chTen;
+    @FXML
+    ImageView imgviLogo;
 
     private final ClientHandler clientHandler;
     private final Logger logger;
@@ -62,7 +68,6 @@ public class StartingPageController {
 
     // global variables to help keep track of desired game settings
     private String mode;
-    private double startingBalance;
     private double timeInMin;
     private int maxNumStocks;
     private ArrayList<String> stockSymbols = new ArrayList<>();
@@ -105,6 +110,11 @@ public class StartingPageController {
             // for now echo it back
             // busProducer.write("ECHO " + message);
         });
+    }
+
+    // initialize method
+    public void initialize() throws FileNotFoundException {
+        imgviLogo.setImage(new Image(new FileInputStream("C:\\Users\\Kalyani Koyya\\Desktop\\Abhay's Desktop\\stockSimGameUI\\logo.png")));
     }
 
     // method to connect the client to the server
@@ -166,7 +176,7 @@ public class StartingPageController {
             json.put("stock_names", stockNamesArray);
             json.put("stock_symbols", stockSymbolsArray);
             json.put("mode", mode);
-            json.put("starting_balance", startingBalance);
+            json.put("starting_balance", Double.parseDouble(txtfiStartingBalance.getText()));
             json.put("game_time", timeInMin);
         } else {
             // for joining current games
@@ -194,7 +204,7 @@ public class StartingPageController {
             accountPageController.lblGameCode.setText("Game Code: " + json.getString("game_code"));
             accountPageController.lstGamePlayers.getItems().clear();
             accountPageController.lblAccountBalance.setText("$" + json.getDouble("first_player_score"));
-            accountPageController.lstGamePlayers.getItems().add(json.getString("player_name") + "                    $" + json.getDouble("first_player_score"));
+            accountPageController.lstGamePlayers.getItems().add(json.getString("player_name") + "               $" + json.getDouble("first_player_score"));
             JsonArray jsonArray = json.getJsonArray("stocks");
             for (int index = 0; index < jsonArray.size(); ++index) {
                 accountPageController.lstStockSelect.getItems().add(jsonArray.getString(index));
@@ -233,7 +243,6 @@ public class StartingPageController {
         chSingle.setSelected(false);
         chMulti.setSelected(false);
     }
-    public void setStartingBalance() { startingBalance = Double.parseDouble(txtfiStartingBalance.getText()); }
     public void twoMinChoiceTime() { timeInMin = 2; chFive.setSelected(false); chTen.setSelected(false); }
     public void fiveMinChoiceTime() { timeInMin = 5; chTwo.setSelected(false); chTen.setSelected(false); }
     public void tenMinChoiceTime() { timeInMin = 10; chTwo.setSelected(false); chFive.setSelected(false); }

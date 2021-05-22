@@ -157,21 +157,31 @@ public class AccountPageController {
             namesList.add(names.getString(i));
             scoresList.add(scores.getDouble(i));
         }
-        // Insertion Sort to set scores and names in ascending order
-        for (int j = 1;j < scoresList.size() - 1;j++) {
-            double tempNum = scoresList.get(j);
-            String tempName = namesList.get(j);
-            int k = j - 1;
-            while (k >= 0 && tempNum <= scoresList.get(k)) {
-                scoresList.set(k + 1, scoresList.get(k));
-                namesList.set(k + 1, namesList.get(k));
-                k = k - 1;
+        if (namesList.size() == 2) {
+            if (scoresList.get(0) > scoresList.get(1)) {
+                lstGamePlayers.getItems().add(namesList.get(0) + "               $" + scoresList.get(0));
+                lstGamePlayers.getItems().add(namesList.get(1) + "               $" + scoresList.get(1));
+            } else {
+                lstGamePlayers.getItems().add(namesList.get(1) + "               $" + scoresList.get(1));
+                lstGamePlayers.getItems().add(namesList.get(0) + "               $" + scoresList.get(0));
             }
-            scoresList.set(k + 1, tempNum);
-            namesList.set(k + 1, tempName);
-        }
-        for (int h = 0;h < namesList.size();h++) {
-            lstGamePlayers.getItems().add(namesList.get(h) + "                    $" + scoresList.get(h));
+        } else if (namesList.size() > 2) {
+            // Insertion Sort to set scores and names in ascending order
+            for (int j = 1;j < scoresList.size() - 1;j++) {
+                double tempNum = scoresList.get(j);
+                String tempName = namesList.get(j);
+                int k = j - 1;
+                while (k >= 0 && tempNum <= scoresList.get(k)) {
+                    scoresList.set(k + 1, scoresList.get(k));
+                    namesList.set(k + 1, namesList.get(k));
+                    k = k - 1;
+                }
+                scoresList.set(k + 1, tempNum);
+                namesList.set(k + 1, tempName);
+            }
+            for (int h = namesList.size() - 1;h >= 0;h--) {
+                lstGamePlayers.getItems().add(namesList.get(h) + "                    $" + scoresList.get(h));
+            }
         }
     }
 
