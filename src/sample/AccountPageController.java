@@ -18,6 +18,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 import javafx.event.ActionEvent;
@@ -110,6 +111,12 @@ public class AccountPageController {
                     lblTimeRemaining.setText(minutesRemaining + ":" + secondsRemaining);
                 }
             });
+        } else if (messageType.equals("start_game_for_all")) {
+            System.out.println("BEFORE PLATFORM RUN");
+            Platform.runLater(() -> {
+                System.out.println("START GAME FOR ALL ACTIVATED ON THIS CLIENT");
+                sendSelectedStockInterval();
+            });
         }
     }
 
@@ -128,60 +135,54 @@ public class AccountPageController {
     private double intervalTime = 3000; // in milliseconds
     private double amountOfDataPerInterval = 10; // in point of data
 
+    // variable will be used in sendSelectedStockInterval() method (it will be used to automatically start game when
+    // a player has not already clicked start)
+    private boolean hasBeenRun = false;
+
     // method will send a request to server in order to get data in smaller intervals
     public void sendSelectedStockInterval() {
-        btnStart.setDisable(true);
+        System.out.println("BEFORE IF STATEMENT");
+        if (!hasBeenRun) {
 
-        JsonArray jsonArray = new JsonArray();
-        for (Object stockSymbol: lstStockSelect.getItems()) {
-            jsonArray.add((String) stockSymbol);
+            System.out.println("START BUTTON CLICKED HERE");
+
+            btnStart.setDisable(true);
+
+            JsonArray jsonArray = new JsonArray();
+            for (Object stockSymbol: lstStockSelect.getItems()) {
+                jsonArray.add((String) stockSymbol);
+            }
+
+            JsonObject json = new JsonObject();
+            json.put("stock_symbols", jsonArray);
+            json.put("interval_time", intervalTime);
+            json.put("amount_per_interval", amountOfDataPerInterval);
+            json.put("type", "stock_data_request_interval");
+            busProducer.write(json.encode());
+
+            hasBeenRun = true;
+
+            logger.info("#@# Start button clicked");
+
         }
-
-        JsonObject json = new JsonObject();
-        json.put("stock_symbols", jsonArray);
-        json.put("interval_time", intervalTime);
-        json.put("amount_per_interval", amountOfDataPerInterval);
-        json.put("type", "stock_data_request_interval");
-        busProducer.write(json.encode());
     }
 
     // method will update the leaderboard accordingly
     public void updateLeaderboard(JsonObject jsonObject) {
-        System.out.println("leaderboard update function");
         JsonArray names = jsonObject.getJsonArray("players");
         JsonArray scores = jsonObject.getJsonArray("scores");
         lstGamePlayers.getItems().clear();
         ArrayList<String> namesList = new ArrayList<>();
         ArrayList<Double> scoresList = new ArrayList<>();
+        ArrayList<TempPlayer> tempLeaderboard = new ArrayList<>();
         for (int i = 0;i < names.size();i++) {
             namesList.add(names.getString(i));
             scoresList.add(scores.getDouble(i));
+            tempLeaderboard.add(new TempPlayer(names.getString(i), scores.getDouble(i)));
         }
-        if (namesList.size() == 2) {
-            if (scoresList.get(0) > scoresList.get(1)) {
-                lstGamePlayers.getItems().add(namesList.get(0) + "               $" + scoresList.get(0));
-                lstGamePlayers.getItems().add(namesList.get(1) + "               $" + scoresList.get(1));
-            } else {
-                lstGamePlayers.getItems().add(namesList.get(1) + "               $" + scoresList.get(1));
-                lstGamePlayers.getItems().add(namesList.get(0) + "               $" + scoresList.get(0));
-            }
-        } else if (namesList.size() > 2) {
-            // Insertion Sort to set scores and names in ascending order
-            for (int j = 1;j < scoresList.size() - 1;j++) {
-                double tempNum = scoresList.get(j);
-                String tempName = namesList.get(j);
-                int k = j - 1;
-                while (k >= 0 && tempNum <= scoresList.get(k)) {
-                    scoresList.set(k + 1, scoresList.get(k));
-                    namesList.set(k + 1, namesList.get(k));
-                    k = k - 1;
-                }
-                scoresList.set(k + 1, tempNum);
-                namesList.set(k + 1, tempName);
-            }
-            for (int h = namesList.size() - 1;h >= 0;h--) {
-                lstGamePlayers.getItems().add(namesList.get(h) + "                    $" + scoresList.get(h));
-            }
+        Collections.sort(tempLeaderboard, new ComparePlayers());
+        for (TempPlayer tempPlayer: tempLeaderboard) {
+            lstGamePlayers.getItems().add(0, tempPlayer.getName() + "        $" + tempPlayer.getScore());
         }
     }
 
@@ -233,7 +234,7 @@ public class AccountPageController {
 
     // method will be built in order to update a chart based on intervals of data that come in from the server
     public void updateChartInterval(JsonObject json) {
-
+        logger.info("#@# chart interval {}", json.encode());
         selectedStockSymbol = (String) lstStockSelect.getItems().get(0);
 
         // if-statement so that we only create all of our StockIntervalData objects only once
@@ -243,6 +244,7 @@ public class AccountPageController {
                 stockIntervalDataList.add(new StockIntervalData(jsonObject.getString("stock_name"), jsonObject.getString("stock_symbol"), jsonObject.getDouble("number_of_shares")));
             }
             firstTimeRun = false;
+            logger.info("#@# firstTimeRun");
         }
 
         // code to update the leaderboard located here
@@ -251,6 +253,8 @@ public class AccountPageController {
         // clearing graph and adding a different series to graph if user clicks on a different stock
         selectedStockSymbol = (String) lstStockSelect.getSelectionModel().getSelectedItem();
         if (selectedStockSymbol != null) {
+
+            logger.info("#@# selectedStockSymbol {}", selectedStockSymbol);
 
             if (!previousStockSelected.equals(selectedStockSymbol)) {
                 previousStockSelected = selectedStockSymbol;
@@ -320,9 +324,7 @@ public class AccountPageController {
         jsonObject.put("share_price", latestSharePrice);
         jsonObject.put("number_of_shares", numOfSharesRequested);
         jsonObject.put("type", type);
-        System.out.println(jsonObject.encode());
         busProducer.write(jsonObject.encode());
-        System.out.println(type + "       " + numOfSharesRequested + "      " + selectedStockSymbol + "     " + latestSharePrice);
     }
 
     // method will send a request to the server so that the player can buy shares in a stock
